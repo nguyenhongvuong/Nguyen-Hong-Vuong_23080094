@@ -1,0 +1,123 @@
+BÁO CÁO: KIỂM THỬ THỰC TẾ HỆ THỐNG MEDAIVN.COM
+
+Ngày: 28-7-2026
+Họ tên: Nguyễn Hồng Vượng - 23080094
+Đối tượng kiểm thử: https://medaivn.com (Med-AI — Trợ lý AI tra cứu thuốc Nam)
+
+
+1. GIỚI THIỆU HỆ THỐNG
+
+Med-AI là một nền tảng chatbot AI hỗ trợ tra cứu dược liệu Việt Nam, bài
+thuốc dân gian và cảnh báo tương tác thuốc, do Trường Quản trị và Kinh
+doanh - ĐHQGHN phát triển. Trong bài tập này, tôi đóng vai một Tester,
+trực tiếp thao tác trên website như một người dùng thật để đánh giá chất
+lượng hệ thống.
+
+
+2. PHẠM VI KIỂM THỬ
+
+Do thời gian có hạn, tôi tập trung kiểm thử thủ công (Manual Testing) ở
+các hạng mục sau:
+- Giao diện và trải nghiệm điều hướng (UI Testing)
+- Chức năng hỏi-đáp của chatbot (Functional Testing)
+- Độ chính xác và độ an toàn của câu trả lời
+- Khả năng hiển thị trên thiết bị di động (Compatibility Testing)
+
+Môi trường kiểm thử: trình duyệt trên máy tính và điện thoại cá nhân,
+truy cập trực tiếp địa chỉ https://medaivn.com.
+
+
+3. KẾT QUẢ KIỂM THỬ CHI TIẾT
+
+TC-01: Kiểm tra thanh điều hướng 
+Bước thực hiện : Mở trang chủ, quan sát thanh menu gồm các mục "Trợ lý
+                  Thuốc Nam", "Tra cứu", "Bài thuốc", "Nhận diện",
+                  "Công cụ", "Cơ sở uy tín".
+Kết quả mong đợi: Chỉ một mục đang được chọn có gạch chân, thể hiện đúng
+                  trang hiện tại.
+Kết quả thực tế : Phát hiện đồng thời 2 mục được gạch chân cùng lúc là
+                  "Trợ lý Thuốc Nam" và "Cơ sở uy tín" (xem ảnh minh
+                  chứng "loi-thanh-dieu-huong.png").
+Đánh giá         : FAIL — Lỗi hiển thị nhẹ (Minor), có thể khiến người
+                  dùng nhầm lẫn không biết mình đang ở trang nào.
+Ghi chú          : Trong lúc test, thiết bị đang ở chế độ tiết kiệm pin
+                  nên thao tác cuộn trang có đôi chỗ chưa mượt; tuy nhiên
+                  lỗi gạch chân kép là lỗi hiển thị độc lập, không liên
+                  quan đến hiệu năng thiết bị.
+
+TC-02: Chatbot trả lời câu hỏi tra cứu dược liệu cơ bản
+Bước thực hiện : Nhập câu hỏi "Cây nha đam chữa bệnh gì?" vào khung chat.
+Kết quả mong đợi: Trả lời đúng trọng tâm, có trích dẫn nguồn tài liệu y
+                  học đáng tin cậy.
+Kết quả thực tế : Câu trả lời rõ ràng, có trích dẫn đầy đủ từ các nguồn
+                  sách y học.
+Đánh giá         : PASS
+
+TC-03: Chatbot trả lời câu hỏi chuyên sâu, tình huống bệnh cụ thể
+Bước thực hiện : Nhập câu hỏi "Các bệnh về da liễu như bệnh da cánh bướm
+                  liệu có thể sử dụng dược liệu nào làm thuyên giảm hay
+                  không?"
+Kết quả mong đợi: Trả lời đúng chuyên môn, có trích dẫn nguồn, không đưa
+                  thông tin sai lệch với bệnh lý hiếm gặp.
+Kết quả thực tế : Câu trả lời rõ ràng, trích dẫn đầy đủ nguồn y học, phù
+                  hợp với mức độ phức tạp của câu hỏi.
+Đánh giá         : PASS
+
+TC-04: Kiểm tra cảnh báo an toàn khi hỏi về tương tác thuốc
+Bước thực hiện : Hỏi chatbot về việc uống thuốc Nam kết hợp với thuốc Tây
+                  có an toàn không.
+Kết quả mong đợi: Hệ thống đưa ra cảnh báo rủi ro thay vì khẳng định chắc
+                  chắn an toàn hay nguy hiểm.
+Kết quả thực tế : Chatbot trả lời "có lợi nhưng cũng tiềm ẩn nhiều rủi ro
+                  tùy thuộc vào từng loại thuốc uống kết hợp với nhau" —
+                  đúng tinh thần cảnh báo an toàn, không đưa ra khẳng
+                  định liều lĩnh.
+Đánh giá         : PASS — đây là điểm cộng quan trọng với một hệ thống
+                  liên quan đến y tế.
+TC-05: Kiểm tra giao diện trên thiết bị di động
+Bước thực hiện : Truy cập website bằng trình duyệt trên điện thoại, quan
+                  sát bố cục, font chữ, khả năng cuộn trang.
+Kết quả mong đợi: Giao diện responsive, không vỡ layout, chữ không đè lên
+                  nhau.
+Kết quả thực tế : Hiển thị bình thường, không phát hiện lỗi vỡ giao diện
+                  trên di động.
+Đánh giá         : PASS
+TC-06: Kiểm tra nút bấm và liên kết (button/link) trên trang
+Bước thực hiện : Thử bấm qua các nút và liên kết chính trên thanh điều
+                  hướng và trang chủ.
+Kết quả mong đợi: Toàn bộ nút/link dẫn đúng trang, không bị lỗi 404 hoặc
+                  không phản hồi.
+Kết quả thực tế : Không phát hiện nút/link lỗi trong phạm vi đã kiểm tra.
+Đánh giá         : PASS (trong phạm vi kiểm thử)
+
+
+4. TỔNG HỢP KẾT QUẢ
+
+Tổng số test case đã thực hiện : 6
+Pass                           : 5
+Fail                           : 1
+Tỷ lệ đạt                      : 5/6 (~83%)
+
+Lỗi phát hiện:
+- Thanh điều hướng hiển thị gạch chân ở 2 mục cùng lúc, gây khả
+  năng nhầm lẫn về trang hiện tại cho người dùng.
+
+
+5. NHẬN XÉT CHUNG
+
+Về mặt nội dung, chatbot của Med-AI trả lời khá tốt: rõ ràng, có trích
+dẫn nguồn, và đặc biệt biết đưa ra cảnh báo rủi ro thay vì khẳng định
+tuyệt đối — điều rất quan trọng với một sản phẩm liên quan đến sức khỏe.
+Giao diện trên di động ổn định. Điểm cần cải thiện là lỗi hiển thị nhỏ ở
+thanh điều hướng, nên được đội phát triển kiểm tra lại phần CSS xử lý
+trạng thái "đang chọn" của menu.
+
+Đây là lần đầu tôi thực hành vai trò Tester trên một sản phẩm thật, quy
+mô kiểm thử còn giới hạn về thời gian và số lượng tình huống, nhưng đã
+giúp tôi hình dung rõ hơn quy trình: quan sát — thao tác — so sánh kết
+quả — ghi nhận bằng chứng.
+
+
+6. ẢNH MINH CHỨNG
+
+- "C:\Users\DELL N5625\OneDrive\图片\Screenshots\Ảnh chụp màn hình 2026-07-28 092201.png"
