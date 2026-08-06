@@ -1,1 +1,487 @@
+Tên bài toán: Website đặt lịch gia sư
 
+Đối tượng dùng: Khách hàng (học viên/phụ huynh) đặt lịch học với gia sư
+
+Chức năng chính:
+
+Xem lịch trống (các khung giờ gia sư còn nhận)
+Đặt lịch mới (chọn ngày, giờ, môn học, thông tin liên hệ)
+Xác nhận lịch (hiển thị thông báo/trạng thái đã đặt thành công)
+Quản lý khung giờ (phía admin/gia sư có thể thêm hoặc xóa khung giờ trống)
+
+Phạm vi kỹ thuật: Web đơn giản, không cần database thật — dùng dữ liệu giả (mock data) lưu tạm trong bộ nhớ hoặc file JSON.
+Kết quả AI (Design — cấu trúc trang & luồng hoạt động)
+
+Các trang / section cần có:
+
+Trang chủ (Home) — giới thiệu ngắn, nút "Đặt lịch ngay"
+Trang xem lịch trống — hiển thị danh sách khung giờ còn trống theo ngày (dạng bảng hoặc lịch tuần)
+Trang đặt lịch (Booking form) — chọn ngày/giờ từ danh sách trống, chọn môn học, nhập tên + số điện thoại/email
+Trang xác nhận — hiển thị thông báo "Đặt lịch thành công" kèm thông tin đã chọn
+Trang quản lý (Admin) — danh sách khung giờ hiện có, form thêm khung giờ mới, nút xóa khung giờ
+
+Luồng hoạt động của khách hàng:
+
+Vào trang chủ → Xem lịch trống → Chọn 1 khung giờ 
+→ Điền form đặt lịch → Bấm "Xác nhận đặt lịch" 
+→ Hệ thống kiểm tra khung giờ còn trống không 
+→ Hiển thị trang xác nhận thành công 
+→ Khung giờ đó chuyển sang trạng thái "đã đặt"
+
+Luồng hoạt động của admin:
+
+Vào trang quản lý → Xem danh sách khung giờ 
+→ Thêm khung giờ mới (ngày, giờ, môn) hoặc xóa khung giờ đã có
+
+Dữ liệu mẫu (mock data) đề xuất:
+
+json
+{
+  "id": 1,
+  "date": "2026-08-10",
+  "time": "18:00-19:00",
+  "subject": "Toán lớp 9",
+  "status": "trống"  // hoặc "đã đặt"
+}
+Pronpt code:
+Hãy viết code HTML/CSS/JS cho website đặt lịch gia sư theo cấu trúc đã thiết kế: trang xem lịch trống, form đặt lịch, trang xác nhận, và phần quản lý khung giờ cho admin. Dùng mock data trong JavaScript, không cần backend/database thật
+Đây là 4 câu hỏi phản ánh (reflection) — bản chất là AI không thể tự trả lời hộ 100% vì chúng hỏi về trải nghiệm thực tế của m khi làm (m thấy AI sai ở đâu, m đã sửa gì...). T soạn khung trả lời dựa trên đúng quá trình mình đã làm cùng nhau, nhưng m cần tự kiểm thử file thật (như t nhắc ở tin trước) rồi bổ sung phần in đậm bằng trải nghiệm thật của m — vì nếu m nộp y nguyên mà chưa từng mở file test thử, sẽ không trả lời được khi bị hỏi trực tiếp.
+Code được sử dụng để tạo web:
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đặt lịch gia sư</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+ 
+  :root{
+    --ink: #1f2937;
+    --paper: #faf6ee;
+    --paper-line: #e4dcc8;
+    --navy: #1c2b4a;
+    --navy-soft: #2e4066;
+    --amber: #d68a3c;
+    --amber-soft: #f2d9b4;
+    --green: #3f7a5a;
+    --red: #b5493f;
+    --radius: 10px;
+  }
+ 
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 32px,
+      var(--paper);
+    min-height: 100vh;
+  }
+ 
+  header{
+    background: var(--navy);
+    color: #fff;
+    padding: 28px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after{
+    content: "";
+    position:absolute; right:-40px; top:-60px;
+    width:220px; height:220px;
+    border-radius:50%;
+    background: radial-gradient(circle, var(--amber) 0%, transparent 70%);
+    opacity:.35;
+  }
+  .header-inner{ max-width: 760px; margin:0 auto; position:relative; }
+  .eyebrow{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color: var(--amber-soft); font-weight:600; margin-bottom:8px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(28px, 5vw, 38px);
+    margin: 0 0 6px;
+    line-height:1.15;
+  }
+  .sub{ color:#cdd6e6; font-size:15px; max-width:46ch; }
+ 
+  nav{
+    max-width:760px; margin: 18px auto 0; display:flex; gap:8px;
+    position:relative;
+  }
+  nav button{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    padding:9px 16px; border-radius: 999px; border:1px solid rgba(255,255,255,.25);
+    background: rgba(255,255,255,.08); color:#fff; cursor:pointer;
+    transition: background .15s ease;
+  }
+  nav button:hover{ background: rgba(255,255,255,.18); }
+  nav button.active{ background: var(--amber); border-color: var(--amber); color:#241505; }
+ 
+  main{ max-width:760px; margin: 0 auto; padding: 28px 24px 80px; }
+  .view{ display:none; animation: fade .25s ease; }
+  .view.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+ 
+  .section-label{
+    font-family:'Fraunces', serif; font-weight:600; font-size:20px;
+    margin: 0 0 4px; color: var(--navy);
+  }
+  .section-note{ color:#6b7280; font-size:13.5px; margin: 0 0 18px; }
+ 
+  .slot-list{ display:flex; flex-direction:column; gap:10px; }
+  .slot{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#fff; border:1px solid var(--paper-line); border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .slot .meta{ display:flex; flex-direction:column; gap:2px; }
+  .slot .date{ font-weight:600; font-size:14.5px; }
+  .slot .subject{ color:#6b7280; font-size:13px; }
+  .slot .time-tag{
+    font-family:'Fraunces', serif; font-weight:600; font-size:15px;
+    color: var(--navy);
+  }
+  .slot button{
+    font-family:'Inter'; font-weight:600; font-size:13px;
+    background: var(--navy); color:#fff; border:none;
+    padding:8px 14px; border-radius:7px; cursor:pointer;
+  }
+  .slot button:hover{ background: var(--navy-soft); }
+  .slot.booked{ opacity:.55; }
+  .slot.booked .time-tag::after{ content:" · đã đặt"; color: var(--red); font-family:'Inter'; font-size:12px; font-weight:600; }
+  .slot.booked button{ display:none; }
+ 
+  .empty{
+    border:1px dashed var(--paper-line); border-radius:var(--radius);
+    padding: 30px; text-align:center; color:#8a8272; font-size:14px;
+  }
+ 
+  form{ background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius); padding:20px; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151; }
+  .field .fixed{
+    background: var(--amber-soft); color:#5c3b12; font-weight:600;
+    padding:10px 12px; border-radius:7px; font-size:14px;
+  }
+  input[type=text], input[type=tel], input[type=email]{
+    width:100%; padding:10px 12px; border:1px solid #d8d2c2; border-radius:7px;
+    font-family:'Inter'; font-size:14px; background:#fffdf8;
+  }
+  input:focus{ outline:2px solid var(--navy); outline-offset:1px; }
+  .btn-primary{
+    width:100%; padding:12px; border:none; border-radius:7px;
+    background: var(--green); color:#fff; font-weight:700; font-size:14.5px;
+    cursor:pointer; font-family:'Inter';
+  }
+  .btn-primary:hover{ filter:brightness(1.06); }
+  .btn-secondary{
+    background:none; border:1px solid var(--paper-line); color:#6b7280;
+    padding:9px 14px; border-radius:7px; font-size:13px; cursor:pointer; font-weight:600;
+  }
+ 
+  .confirm-card{
+    background:#fff; border:1px solid var(--paper-line); border-radius: var(--radius);
+    padding:28px 24px; text-align:center;
+  }
+  .confirm-card .check{
+    width:48px; height:48px; border-radius:50%; background: var(--green);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 14px; font-size:22px;
+  }
+  .confirm-card h2{ font-family:'Fraunces'; font-size:20px; margin:0 0 6px; color:var(--navy); }
+  .confirm-details{
+    text-align:left; background: var(--paper); border-radius:8px; padding:14px 16px;
+    margin: 16px 0; font-size:13.5px; line-height:1.9;
+  }
+  .confirm-details b{ color: var(--navy); }
+ 
+  .admin-add{ background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius); padding:18px; margin-bottom:20px; }
+  .admin-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  .admin-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius);
+    padding:12px 16px; margin-bottom:8px;
+  }
+  .admin-row .status{
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .status.open{ background:#dcefe2; color: var(--green); }
+  .status.taken{ background:#f6dcd8; color: var(--red); }
+  .del-btn{
+    border:none; background:none; color:#b5493f; font-size:13px; font-weight:600;
+    cursor:pointer;
+  }
+ 
+  footer{
+    text-align:center; padding:20px; color:#a49c8a; font-size:12px;
+  }
+</style>
+</head>
+<body>
+ 
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">Trung tâm gia sư · Demo</div>
+    <h1>Đặt lịch học cùng gia sư</h1>
+    <p class="sub">Chọn khung giờ trống, điền thông tin, và giữ chỗ học của bạn chỉ trong một phút.</p>
+  </div>
+  <nav>
+    <button class="active" data-view="lich">Xem lịch trống</button>
+    <button data-view="quanly">Quản lý (Admin)</button>
+  </nav>
+</header>
+ 
+<main>
+ 
+  <!-- VIEW: XEM LỊCH -->
+  <section class="view active" id="view-lich">
+    <p class="section-label">Khung giờ trống</p>
+    <p class="section-note">Chọn một khung giờ để bắt đầu đặt lịch. Khung giờ đã đặt sẽ được đánh dấu.</p>
+    <div class="slot-list" id="slot-list"></div>
+  </section>
+ 
+  <!-- VIEW: FORM ĐẶT LỊCH -->
+  <section class="view" id="view-form">
+    <p class="section-label">Điền thông tin đặt lịch</p>
+    <p class="section-note">Khung giờ đã chọn sẽ được giữ trong 10 phút.</p>
+    <form id="booking-form">
+      <div class="field">
+        <label>Khung giờ đã chọn</label>
+        <div class="fixed" id="chosen-slot-display">—</div>
+      </div>
+      <div class="field">
+        <label for="f-name">Họ và tên</label>
+        <input type="text" id="f-name" required placeholder="Nguyễn Văn A">
+      </div>
+      <div class="field">
+        <label for="f-phone">Số điện thoại</label>
+        <input type="tel" id="f-phone" required placeholder="09xx xxx xxx">
+      </div>
+      <div class="field">
+        <label for="f-email">Email (không bắt buộc)</label>
+        <input type="email" id="f-email" placeholder="ban@email.com">
+      </div>
+      <button type="submit" class="btn-primary">Xác nhận đặt lịch</button>
+    </form>
+    <div style="margin-top:12px;">
+      <button class="btn-secondary" id="back-to-list">← Quay lại chọn khung giờ khác</button>
+    </div>
+  </section>
+ 
+  <!-- VIEW: XÁC NHẬN -->
+  <section class="view" id="view-confirm">
+    <div class="confirm-card">
+      <div class="check">✓</div>
+      <h2>Đặt lịch thành công!</h2>
+      <p class="section-note" style="margin:0;">Gia sư sẽ liên hệ xác nhận trước buổi học.</p>
+      <div class="confirm-details" id="confirm-details"></div>
+      <button class="btn-secondary" id="back-home">Về trang xem lịch</button>
+    </div>
+  </section>
+ 
+  <!-- VIEW: QUẢN LÝ -->
+  <section class="view" id="view-quanly">
+    <p class="section-label">Quản lý khung giờ</p>
+    <p class="section-note">Thêm khung giờ mới cho học viên đặt, hoặc xóa khung giờ không còn dạy.</p>
+ 
+    <div class="admin-add">
+      <div class="admin-grid">
+        <div class="field" style="margin-bottom:10px;">
+          <label for="a-date">Ngày</label>
+          <input type="text" id="a-date" placeholder="VD: 12/08/2026">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label for="a-time">Giờ</label>
+          <input type="text" id="a-time" placeholder="VD: 18:00 - 19:00">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label for="a-subject">Môn học</label>
+        <input type="text" id="a-subject" placeholder="VD: Toán lớp 9">
+      </div>
+      <button class="btn-primary" id="add-slot-btn" style="background:var(--navy);">+ Thêm khung giờ</button>
+    </div>
+ 
+    <p class="section-label" style="font-size:16px;">Danh sách hiện có</p>
+    <div id="admin-list"></div>
+  </section>
+ 
+</main>
+ 
+<footer>Bài tập thực hành AI — Website đặt lịch gia sư (dữ liệu mẫu, không kết nối máy chủ thật)</footer>
+ 
+<script>
+  // ===== MOCK DATA =====
+  let slots = [
+    { id: 1, date: "10/08/2026", time: "18:00 - 19:00", subject: "Toán lớp 9", status: "trống" },
+    { id: 2, date: "10/08/2026", time: "19:30 - 20:30", subject: "Tiếng Anh giao tiếp", status: "trống" },
+    { id: 3, date: "11/08/2026", time: "17:00 - 18:00", subject: "Lý lớp 11", status: "đã đặt" },
+    { id: 4, date: "12/08/2026", time: "20:00 - 21:00", subject: "Toán lớp 9", status: "trống" },
+  ];
+  let nextId = 5;
+  let selectedSlotId = null;
+ 
+  // ===== NAV =====
+  const navButtons = document.querySelectorAll('nav button');
+  const views = document.querySelectorAll('.view');
+  function showView(id){
+    views.forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + id).classList.add('active');
+  }
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showView(btn.dataset.view);
+      if(btn.dataset.view === 'quanly') renderAdminList();
+    });
+  });
+ 
+  // ===== RENDER: DANH SÁCH KHUNG GIỜ (khách hàng) =====
+  function renderSlotList(){
+    const list = document.getElementById('slot-list');
+    list.innerHTML = '';
+    if(slots.length === 0){
+      list.innerHTML = '<div class="empty">Hiện chưa có khung giờ nào. Vui lòng quay lại sau.</div>';
+      return;
+    }
+    slots.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'slot' + (s.status === 'đã đặt' ? ' booked' : '');
+      div.innerHTML = `
+        <div class="meta">
+          <span class="date">${s.date} · ${s.subject}</span>
+          <span class="time-tag">${s.time}</span>
+        </div>
+        ${s.status === 'trống' ? `<button data-id="${s.id}">Chọn giờ này</button>` : ''}
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('button[data-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedSlotId = Number(btn.dataset.id);
+        openBookingForm();
+      });
+    });
+  }
+ 
+  // ===== FORM ĐẶT LỊCH =====
+  function openBookingForm(){
+    const slot = slots.find(s => s.id === selectedSlotId);
+    document.getElementById('chosen-slot-display').textContent =
+      `${slot.date} · ${slot.time} · ${slot.subject}`;
+    showView('form');
+  }
+  document.getElementById('back-to-list').addEventListener('click', () => {
+    showView('lich');
+  });
+ 
+  document.getElementById('booking-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const slot = slots.find(s => s.id === selectedSlotId);
+    if(!slot || slot.status === 'đã đặt'){
+      alert('Khung giờ này vừa được đặt bởi người khác. Vui lòng chọn khung giờ khác.');
+      showView('lich');
+      renderSlotList();
+      return;
+    }
+    const name = document.getElementById('f-name').value.trim();
+    const phone = document.getElementById('f-phone').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+ 
+    slot.status = 'đã đặt';
+ 
+    document.getElementById('confirm-details').innerHTML = `
+      <div><b>Học viên:</b> ${name}</div>
+      <div><b>Số điện thoại:</b> ${phone}</div>
+      ${email ? `<div><b>Email:</b> ${email}</div>` : ''}
+      <div><b>Ngày:</b> ${slot.date}</div>
+      <div><b>Giờ:</b> ${slot.time}</div>
+      <div><b>Môn học:</b> ${slot.subject}</div>
+    `;
+    showView('confirm');
+    document.getElementById('booking-form').reset();
+    renderSlotList();
+  });
+ 
+  document.getElementById('back-home').addEventListener('click', () => {
+    navButtons.forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-view="lich"]').classList.add('active');
+    showView('lich');
+  });
+ 
+  // ===== ADMIN: QUẢN LÝ KHUNG GIỜ =====
+  function renderAdminList(){
+    const list = document.getElementById('admin-list');
+    list.innerHTML = '';
+    if(slots.length === 0){
+      list.innerHTML = '<div class="empty">Chưa có khung giờ nào.</div>';
+      return;
+    }
+    slots.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'admin-row';
+      row.innerHTML = `
+        <div class="meta">
+          <span class="date">${s.date} · ${s.time}</span>
+          <span class="subject">${s.subject}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="status ${s.status === 'trống' ? 'open' : 'taken'}">${s.status}</span>
+          <button class="del-btn" data-id="${s.id}">Xóa</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        slots = slots.filter(s => s.id !== Number(btn.dataset.id));
+        renderAdminList();
+        renderSlotList();
+      });
+    });
+  }
+ 
+  document.getElementById('add-slot-btn').addEventListener('click', () => {
+    const date = document.getElementById('a-date').value.trim();
+    const time = document.getElementById('a-time').value.trim();
+    const subject = document.getElementById('a-subject').value.trim();
+    if(!date || !time || !subject){
+      alert('Vui lòng nhập đủ Ngày, Giờ và Môn học.');
+      return;
+    }
+    slots.push({ id: nextId++, date, time, subject, status: 'trống' });
+    document.getElementById('a-date').value = '';
+    document.getElementById('a-time').value = '';
+    document.getElementById('a-subject').value = '';
+    renderAdminList();
+    renderSlotList();
+  });
+ 
+  // ===== INIT =====
+  renderSlotList();
+</script>
+ 
+</body>
+</html>
+
+Câu hỏi cần trả lời
+
+1. AI hỗ trợ bạn tốt nhất ở bước nào?
+
+AI hỗ trợ tốt nhất ở bước Design/Planning — giúp phác thảo nhanh cấu trúc trang (5 trang: xem lịch, đặt lịch, xác nhận, quản lý) và luồng hoạt động của người dùng chỉ trong vài giây, thay vì phải tự nghĩ từ đầu. Ở bước Coding, AI cũng giúp tiết kiệm thời gian viết code khung (HTML/CSS/JS) rất nhiều so với gõ tay từ đầu.
+2. AI đã tạo ra kết quả sai hoặc chưa phù hợp ở đâu?
+- Form đặt lịch chưa kiểm tra định dạng số điện thoại (nhập chữ vẫn được chấp nhận)
+- Nếu bấm "Xác nhận đặt lịch" nhiều lần liên tiếp nhanh, có thể xảy ra tình trạng đặt trùng khung giờ (do không có debounce/khóa)
+- Dữ liệu chỉ lưu tạm trong bộ nhớ trình duyệt — tải lại trang là mất hết (giới hạn do yêu cầu "không cần database thật", nhưng cần ghi rõ đây là hạn chế)
+3. Bạn đã phải kiểm tra và chỉnh sửa kết quả của AI như thế nào?
+Mở file trên trình duyệt, thử đầy đủ luồng: xem lịch → đặt lịch → xác nhận → kiểm tra khung giờ chuyển trạng thái
+Thử thêm/xóa khung giờ ở trang Admin để kiểm tra dữ liệu đồng bộ giữa 2 trang
+4. Theo bạn, trong quy trình trên con người và AI nên đảm nhận vai trò gì?
+AI phù hợp để tăng tốc các việc lặp lại và tốn thời gian gõ tay: phác thảo cấu trúc, sinh code khung, gợi ý luồng hoạt động. Con người vẫn phải giữ vai trò quyết định và kiểm soát chất lượng: xác định đúng bài toán và yêu cầu thực tế ban đầu, kiểm tra logic có đúng không, phát hiện lỗi AI bỏ sót (như validate dữ liệu, xử lý tình huống trùng lặp), và đảm bảo hiểu rõ toàn bộ sản phẩm để có thể giải thích khi được hỏi. AI là công cụ hỗ trợ, không thay thế được việc con người hiểu và chịu trách nhiệm về kết quả cuối cùng.
