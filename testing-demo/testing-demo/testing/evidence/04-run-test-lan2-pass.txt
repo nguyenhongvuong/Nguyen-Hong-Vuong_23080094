@@ -1,0 +1,28 @@
+PASS testing/tests/utils.test.js
+  add()
+    ✓ TC01 [Normal] cộng 2 số dương (3 ms)
+    ✓ TC02 [Error Handling] ném lỗi khi truyền vào chuỗi thay vì số (19 ms)
+  divide()
+    ✓ TC03 [Normal] chia 2 số hợp lệ (1 ms)
+    ✓ TC04 [Error Handling] ném lỗi khi chia cho 0 (1 ms)
+    ✓ TC05 [Invalid Data] ném lỗi khi tham số không phải số (1 ms)
+  calculateDiscount()
+    ✓ TC06 [Normal] giảm giá 10% đúng cho giá 100 (1 ms)
+    ✓ TC07 [Boundary] discountPercent = 0 -> giá không đổi (1 ms)
+    ✓ TC08 [Boundary] discountPercent = 100 -> giá bằng 0 (1 ms)
+    ✓ TC09 [Edge] discountPercent = 150 (>100) phải ném lỗi, không được trả số âm (1 ms)
+    ✓ TC10 [Invalid Data] price âm phải ném lỗi (1 ms)
+  isValidEmail()
+    ✓ TC11 [Normal] email hợp lệ trả về true
+    ✓ TC12 [Invalid Data] chuỗi rỗng trả về false (1 ms)
+    ✓ TC13 [Invalid Data] thiếu ký tự @ trả về false (3 ms)
+  getMax()
+    ✓ TC14 [Normal] tìm số lớn nhất trong mảng
+    ✓ TC15 [Edge] mảng chỉ có 1 phần tử (1 ms)
+    ✓ TC16 [Error Handling] mảng rỗng phải ném lỗi (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        0.425 s, estimated 1 s
+Ran all test suites matching testing/tests/utils.test.js.
